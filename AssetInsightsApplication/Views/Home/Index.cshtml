@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+<link href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css"  rel="stylesheet"/>
+
+<script type="text/javascript" src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
+<input type="text" id="txtEmployeeId" placeholder="Employee Id" style="display:none;" />
+<input type="text" id="txtName" placeholder="Employee Name" style="margin-right:5px;" />
+<input type="text" id="txtJob" placeholder="Job Description" style="margin-right:5px;" />
+
+<button id="btnSave" class="btn btn-success" style="margin-right:10px;">Save</button>
+
+<br />
+<br />
+
+<table id="tblEmployee" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Employee Id</th>
+            <th>Name</th>
+            <th>Job Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#tblEmployee').DataTable({
+            "ajax": {
+                "url": "/api/Employee",
+                "dataSrc": ""
+            },
+            columns: [
+                { data: 'EmployeeId' },
+                { data: 'Name' },
+                { data: 'Job' },
+                {
+                    data: "id", render: function (data, type, row, meta) {
+                        return "<button class='btn btn-primary' style='margin-right:10px;' onClick='Edit(" + JSON.stringify(row) + ")'>Edit</button>" +
+                            "<button class='btn btn-danger' onClick='Delete(" + JSON.stringify(row) + ")'>Delete</button>";
+                    }
+                },
+            ]
+        });
+
+        $("#btnSave").click(function () {
+            var employee = {
+                EmployeeId: $.trim($("#txtEmployeeId").val()) == "" ? 0 : $("#txtEmployeeId").val(),
+                Name: $("#txtName").val(),
+                Job: $("#txtJob").val()
+            };
+
+            $.post("api/Employee", { employee: employee })
+                .done(function (data) {
+                    Reset();
+                    ReloadGrid();
+                    alert("saved");
+                });
+        });
+    });
+    function Edit(oEmployee) {
+        $("#txtEmployeeId").val(oEmployee.EmployeeId);
+        $("#txtName").val(oEmployee.Name);
+        $("#txtJob").val(oEmployee.Job);
+    }
+    function Delete(oEmployee) {
+        $.ajax({
+            url: "api/Employee/" + oEmployee.EmployeeId,
+            type: 'DELETE',
+            success: function (result) {
+                alert("Deleted");
+                ReloadGrid();
+            }
+        });
+    }
+    function Reset() {
+        $("#txtEmployeeId").val(0);
+        $("#txtName").val("");
+        $("#txtJob").val("");
+    }
+    function ReloadGrid() {
+        $('tblEmployee').DataTable().clear();
+        $('tblEmployee').DataTable().ajax.reload();
+    }
+
+</script>
+
+
